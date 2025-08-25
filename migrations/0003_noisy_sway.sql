@@ -1,0 +1,1 @@
+ALTER TABLE `settings` ADD `failure_strategy` text DEFAULT 'throw-error' NOT NULL;

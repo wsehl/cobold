@@ -61,6 +61,10 @@ setting-audio-format-wav = wav
 setting-audio-format-opus = opus
 setting-audio-quality = audio bitrate
 
+setting-failure-strategy = on error
+setting-failure-strategy-throw-error = show error message
+setting-failure-strategy-return-url = reply with original link
+
 stats-personal = i helped you with downloading { $count } times! (˶ᵔ ᵕ ᵔ˶)
 stats-global = i helped with downloading { $count } times! (˶ᵔ ᵕ ᵔ˶)
 

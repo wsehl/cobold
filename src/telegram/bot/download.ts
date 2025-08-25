@@ -32,7 +32,12 @@ downloadDp.onNewMessage(filters.chat("user"), async (msg) => {
     const req = await createRequest(extractedUrl || msg.text, msg.sender.id)
 
     if (!req.success) {
-        await msg.replyText(t("error", { message: e(req.error) }))
+        const settings = await getPeerSettings(msg.sender)
+        if (settings.failureStrategy === "return-url") {
+            await msg.replyText(extractedUrl || msg.text)
+        } else {
+            await msg.replyText(t("error", { message: e(req.error) }))
+        }
         return
     }
 
@@ -57,6 +62,10 @@ downloadDp.onNewMessage(filters.chat("user"), async (msg) => {
             msg.sender,
             !!settings.preferredAttribution,
             ({ medias }) => msg.replyMediaGroup(medias),
+            async (text) => {
+                await msg.client.deleteMessagesById(msg.chat.inputPeer, [reply.id])
+                await msg.replyText(text, { disableWebPreview: true })
+            },
         )
     }
 })
@@ -152,11 +161,21 @@ async function onOutputSelected(
     peer: Peer,
     leaveSourceLink: boolean,
     sendGroup: (send: { medias: InputMediaLike[] }) => Promise<unknown>,
+    replaceWithText?: (text: string) => Promise<unknown>,
 ) {
     await editMessage({ text: t("downloading-title") })
     const res = await handleMediaDownload(outputType, request, peer)
     if (!res.success) {
-        await editMessage({ text: t("error", { message: e(res.error) }) })
+        const settings = await getPeerSettings(peer)
+        if (settings.failureStrategy === "return-url" && request?.url) {
+            if (replaceWithText) {
+                await replaceWithText(request.url)
+            } else {
+                await editMessage({ text: request.url })
+            }
+        } else {
+            await editMessage({ text: t("error", { message: e(res.error) }) })
+        }
         return
     }
 
